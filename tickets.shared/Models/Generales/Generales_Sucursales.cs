@@ -26,5 +26,9 @@ namespace tickets.shared.Models
 
         public Generales_Empresas? Empresa { get; set; }
 
+        public ICollection<Generales_Empleados>? Empleados { get; set; }
+        public int CantidadEmpleados => Empleados == null ? 0 : Empleados.Count;
+
+
     }
 }

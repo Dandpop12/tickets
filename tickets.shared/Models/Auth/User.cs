@@ -32,6 +32,13 @@ namespace tickets.shared.Models
 
         [Display(Name = "Usuario")]
         public string FullName => $"{FirstName} {LastName}";
+
+        public ICollection<Tickets>? Tickets { get; set; }
+        public int CantidadTickets => Tickets == null ? 0 : Tickets.Count;
+
+        public ICollection<Generales_Empleados>? Empleados { get; set; }
+        public int CantidadEmpleados => Empleados == null ? 0 : Empleados.Count;
+
     }
 
 }
