@@ -1,0 +1,210 @@
+﻿@page "/departamentos"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Super_User, Admin")]
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudBreadcrumbs Items="_items" />
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudCard Elevation="25" Class="rounded-lg">
+                <MudCardHeader Class="pb-0">
+
+                    <MudText Typo="Typo.h6">Departamentos</MudText>
+                    <MudSpacer />
+
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Style="text-transform:none"
+                               OnClick="@(() => ShowModal())">
+                        Agregar Departamento
+                    </MudButton>
+
+                </MudCardHeader>
+
+                <MudCardContent>
+
+
+                    <MudTable ServerData="@(new Func<TableState, Task<TableData<Generales_Departamentos>>>(ServerReload))"
+                              Hover="true"
+                              Breakpoint="Breakpoint.Sm"
+                              Dense="true"
+                              LoadingProgressColor="Color.Info"
+                              @ref="table"
+                              Elevation="0">
+                        <ToolBarContent>
+
+                            <MudTextField Class="mb-4" T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Buscar" Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Text"
+                                          Clearable="true"></MudTextField>
+
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>Nombre</MudTh>
+                            <MudTh>Acciones</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+
+                            <MudTd DataLabel="Descripcion">
+                                @context.Descripcion
+                            </MudTd>
+                            <MudTd DataLabel="Acciones">
+                                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning" Size="Size.Small" Style="text-transform:none"
+                                           OnClick="@(() => ShowModal(context.Id, true))">
+                                    Modificar
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" Style="text-transform:none"
+                                           OnClick="@(() => DeleteAsync(context.Id))">
+                                    Eliminar
+                                </MudButton>
+
+
+                            </MudTd>
+
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText>No matching records found</MudText>
+                        </NoRecordsContent>
+                        <LoadingContent>
+                            <MudText>Loading...</MudText>
+                        </LoadingContent>
+                        <PagerContent>
+                            <MudTablePager HideRowsPerPage="true" HidePagination="false" />
+                        </PagerContent>
+                    </MudTable>
+
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+
+
+@code {
+    private IEnumerable<Generales_Departamentos> pagedData;
+    private MudTable<Generales_Departamentos> table;
+    private int totalItems;
+    private string searchString = null!;
+
+    [CascadingParameter]
+    IModalService Modal { get; set; } = default!;
+
+    private async Task<TableData<Generales_Departamentos>> ServerReload(TableState state)
+    {
+        string url1 = string.Empty;
+        string url2 = string.Empty;
+
+        if (string.IsNullOrEmpty(searchString))
+        {
+            url1 = $"api/departamentos?page={state.Page + 1}";
+            url2 = $"api/departamentos/totalPages";
+        }
+        else
+        {
+            url1 = $"api/departamentos?page={state.Page + 1}&filter={searchString}";
+            url2 = $"api/departamentos/totalPages?filter={searchString}";
+        }
+
+        try
+        {
+            var responseHppt = await repository.Get<List<Generales_Departamentos>>(url1);
+            var responseHppt2 = await repository.Get<PagesDTO>(url2);
+
+            IEnumerable<Generales_Departamentos> data = responseHppt.Response!;
+
+            totalItems = (int)responseHppt2.Response!.TotalCounts!;
+
+            pagedData = data.ToArray();
+            return new TableData<Generales_Departamentos>() { TotalItems = totalItems, Items = pagedData };
+        }
+        catch (Exception ex)
+        {
+            await sweetAlertService.FireAsync("Error", ex.Message, SweetAlertIcon.Error);
+            return new TableData<Generales_Departamentos>() { TotalItems = totalItems, Items = pagedData };
+        }
+    }
+
+    private void OnSearch(string text)
+    {
+        searchString = text;
+        table.ReloadServerData();
+    }
+
+    private void PageChanged(int i)
+    {
+        table.NavigateTo(i - 1);
+    }
+
+    private List<BreadcrumbItem> _items = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Inicio", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("Generales", href: null, disabled: true),
+        new BreadcrumbItem("Departamentos", href: null, disabled: true)
+    };
+
+    private async Task ShowModal(int id = 0, bool isEdit = false)
+    {
+        IModalReference modalReference;
+
+        if (isEdit)
+        {
+            modalReference = Modal.Show<DepartamentoEdit>(string.Empty, new ModalParameters().Add("Id", id));
+        }
+        else
+        {
+            modalReference = Modal.Show<DepartamentoCreate>();
+        }
+
+        var result = await modalReference.Result;
+        if (result.Confirmed)
+        {
+            ToastLoad("Registro guardado correctamente", MudBlazor.Severity.Success);
+            await table.ReloadServerData();
+        }
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        var result = await sweetAlertService.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmación",
+                Text = "¿Está seguro de querer eliminar este registro?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                CancelButtonText = "Volver atrás",
+                CancelButtonColor = "#1E88E5",
+                ConfirmButtonText = "Si, eliminar registro",
+                ConfirmButtonColor = "#E53935"
+            });
+
+        var confirm = string.IsNullOrEmpty(result.Value);
+        if (confirm)
+        {
+            return;
+        }
+
+        var httpResponse = await repository.Delete($"/api/departamentos/{id}");
+        if (httpResponse.Error)
+        {
+            if (httpResponse.HttpResponseMessage.StatusCode != HttpStatusCode.NotFound)
+            {
+                var msg = await httpResponse.GetErrorMessageAsync();
+                await sweetAlertService.FireAsync("Error", msg, SweetAlertIcon.Error);
+                return;
+            }
+        }
+
+        ToastLoad("Registro eliminado correctamente", MudBlazor.Severity.Success);
+        await table.ReloadServerData();
+    }
+
+    private void ToastLoad(string Title, MudBlazor.Severity severity)
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopEnd;
+        Snackbar.Add(Title, severity);
+    }
+}

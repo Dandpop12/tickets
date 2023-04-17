@@ -1,0 +1,110 @@
+﻿@inject SweetAlertService sweetAlertService
+@inject IRepository repository
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
+<EditForm EditContext="editContext" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <MudStack Spacing="1">
+
+        <MudTextField @bind-Value="@Model!.Nombre" For="@(() => @Model!.Nombre)" Label="Nombre" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" />
+
+        <MudTextField @bind-Value="@Model.NombreComercial" For="@(() => @Model.NombreComercial)" Label="Nombre Comercial" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" />
+
+        <MudStack Row="true" Justify="Justify.SpaceBetween">
+
+            <MudNumericField HideSpinButtons="true" @bind-Value="@Model.RNC" For="@(() => @Model.RNC)" Label="RNC" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" />
+
+            <MudTextField Mask="@(new PatternMask("(000) 000 0000"))" @bind-Value="@Model.Telefono" For="@(() => @Model.Telefono)" Label="Teléfono" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+
+        </MudStack>
+
+        <MudTextField Lines="2" @bind-Value="@Model.Direccion" For="@(() => @Model.Direccion)" Label="Dirección" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" />
+
+        <MudTextField @bind-Value="@Model.Correo" For="@(() => @Model.Correo)" InputType="InputType.Email" Label="Correo electrónico" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+
+        <MudTextField @bind-Value="@Model.Website" For="@(() => @Model.Website)" Label="Sitio Web" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+
+        <MudStack Row="true" Justify="Justify.SpaceBetween" Class="pt-4">
+
+            <MudButton Disabled="@IsLoading" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">
+
+                @if (IsLoading)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Guardando</MudText>
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Save" Title="Guardar" Size="Size.Small" Class="mr-3" />
+                    <MudText>Guardar</MudText>
+                }
+            </MudButton>
+
+            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.ArrowBack" Variant="Variant.Filled" Color="Color.Info" OnClick="ReturnAction">
+                Volver
+            </MudButton>
+        </MudStack>
+
+    </MudStack>
+
+
+</EditForm>
+
+@code {
+
+    private EditContext editContext = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public Generales_Empresas? Model { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback OnValidSubmit { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback ReturnAction { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    public bool FormPostedSuccessfully { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        editContext = new(Model!);
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var formWasModified = editContext.IsModified();
+        if (!formWasModified || FormPostedSuccessfully)
+        {
+            return;
+        }
+
+        var result = await sweetAlertService.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmación",
+                Text = "¿Deseas abandonar la página y perder los cambios?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                CancelButtonText = "Volver atrás",
+                CancelButtonColor = "#1E88E5",
+                ConfirmButtonText = "Si, abandonar página",
+                ConfirmButtonColor = "#43A047"
+            });
+
+        var confirm = !string.IsNullOrEmpty(result.Value);
+        if (confirm)
+        {
+            return;
+        }
+
+        context.PreventNavigation();
+    }
+}
+

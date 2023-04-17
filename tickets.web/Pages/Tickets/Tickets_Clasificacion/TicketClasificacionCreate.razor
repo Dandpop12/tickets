@@ -1,0 +1,43 @@
+﻿@page "/clasificacionesTickets/create"
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Admin")]
+
+<MudText Typo="Typo.h5">Nueva Clasificación</MudText>
+<MudDivider Class="mb-4"/>
+
+<TicketClasificacionForm @ref="modelForm" Model="model" OnValidSubmit="CreateAsync" ReturnAction="Return" IsLoading="_isLoading" />
+
+@code {
+    private Tickets_Clasificacion model = new();
+    private TicketClasificacionForm? modelForm;
+    private bool _isLoading;
+
+    [CascadingParameter]
+    BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+    private async Task CreateAsync()
+    {
+        _isLoading = true;
+        var httpResponse = await repository.Post("/api/clasificacionesTickets", model);
+        if (httpResponse.Error)
+        {
+            _isLoading = false;
+            var msg = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", msg, SweetAlertIcon.Error);
+            return;
+        }
+
+        await BlazoredModal.CloseAsync(ModalResult.Ok());
+        _isLoading = false;
+        Return();
+    }
+
+    private void Return()
+    {
+        modelForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/clasificacionesTickets");
+    }
+}

@@ -1,6 +1,51 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿<MudNavMenu Rounded="false" Bordered="true" Margin="Margin.Dense" Dense="false" Color="Color.Info">
+
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Dashboard">Inicio</MudNavLink>
+
+    <MudNavLink Href="/counter" Match="NavLinkMatch.Prefix">Counter</MudNavLink>
+
+    <AuthorizeView>
+        <Authorized>
+            <MudNavLink Href="tickets" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.FormatListBulleted">Tickets</MudNavLink>
+            <MudNavLink Href="clientes" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.PeopleAlt">Clientes</MudNavLink>
+        </Authorized>
+    </AuthorizeView>
+
+    <AuthorizeView Roles="Super_User, Admin">
+        <Authorized>
+            <MudNavGroup Title="Generales" Icon="@Icons.Material.Outlined.Apps">
+
+                <MudText Typo="Typo.body2" Class="px-4 mt-1 mud-text-secondary">Clientes</MudText>
+                <MudDivider DividerType="DividerType.FullWidth" Light="false" />
+                <MudNavLink Href="/clasificacionClientes" Match="NavLinkMatch.Prefix">Clasificación de Clientes</MudNavLink>
+
+                <MudText Typo="Typo.body2" Class="px-4 mt-1 mud-text-secondary">Tickets</MudText>
+                <MudDivider DividerType="DividerType.FullWidth" Light="false" />
+                <MudNavLink Href="/clasificacionesTickets" Match="NavLinkMatch.Prefix">Clasificación de Tickets</MudNavLink>
+
+                <MudText Typo="Typo.body2" Class="px-4 mt-1 mud-text-secondary">Empresa</MudText>
+                <MudDivider DividerType="DividerType.FullWidth" Light="false" />
+                <MudNavLink Href="/empresas" Match="NavLinkMatch.Prefix">Empresas</MudNavLink>
+                <MudNavLink Href="/sucursales" Match="NavLinkMatch.Prefix">Sucursales</MudNavLink>
+                <MudNavLink Href="/empleados" Match="NavLinkMatch.Prefix">Empleados</MudNavLink>
+                <MudNavLink Href="/departamentos" Match="NavLinkMatch.Prefix">Departamentos</MudNavLink>
+
+            </MudNavGroup>
+
+            <MudNavGroup Title="Administración" Icon="@Icons.Material.Outlined.AdminPanelSettings">
+                <MudNavLink Href="/usuarios" Match="NavLinkMatch.Prefix">Usuarios</MudNavLink>
+            </MudNavGroup>
+
+        </Authorized>
+    </AuthorizeView>
+
+</MudNavMenu>
+
+
+
+@*<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">tickets.web</a>
+        <a class="navbar-brand" href="">IntraCOOP</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -10,20 +55,44 @@
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <NavLink class="nav-link px-3" href="" Match="NavLinkMatch.All">
                 <span class="oi oi-home" aria-hidden="true"></span> Home
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
+            <NavLink class="nav-link px-3" href="counter">
                 <span class="oi oi-plus" aria-hidden="true"></span> Counter
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+            <NavLink class="nav-link px-3" href="solicitudes">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Solicitudes
             </NavLink>
         </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link px-3" href="visitas">
+                <span class="oi oi-list" aria-hidden="true"></span> Visitas
+            </NavLink>
+        </div>
+
+        <AuthorizeView Roles="Super_User">
+            <Authorized>
+                <MudNavGroup Title="Productos" Icon="@Icons.Material.Outlined.Apps">
+                    <MudNavLink Href="/products" Match="NavLinkMatch.Prefix">Productos</MudNavLink>
+                    <MudNavLink Href="/categories" Match="NavLinkMatch.Prefix">Categorías</MudNavLink>
+                </MudNavGroup>
+
+                <MudNavLink Href="sales" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.FormatListBulleted">Pedidos</MudNavLink>
+
+                <div class="nav-item px-3">
+                    <MudNavLink Href="visitas" Match="NavLinkMatch.Prefix" Class="nav-link px-0">
+                        <span class="oi oi-list" aria-hidden="true"></span> Visitas
+                    </MudNavLink>
+                </div>
+
+            </Authorized>
+        </AuthorizeView>
+
     </nav>
 </div>
 
@@ -37,3 +106,4 @@
         collapseNavMenu = !collapseNavMenu;
     }
 }
+*@

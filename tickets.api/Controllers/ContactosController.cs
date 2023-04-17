@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using tickets.api.Data;
@@ -8,7 +9,7 @@ using tickets.shared.Models;
 
 namespace tickets.api.Controllers
 {
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/contactos")]
     [ApiController]
     public class ContactosController : ControllerBase
@@ -30,7 +31,13 @@ namespace tickets.api.Controllers
 
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
-                queryable = queryable.Where(x => x.FullNameWithPhone.ToLower().Contains(pagination.Filter.ToLower()));
+                queryable = queryable.Where(x => x.Nombre.ToLower().Contains(pagination.Filter.ToLower())
+                || x.Apellido.ToLower().Contains(pagination.Filter.ToLower())
+                || x.Departamento!.ToLower().Contains(pagination.Filter.ToLower())
+                || x.Cargo!.ToLower().Contains(pagination.Filter.ToLower())
+                || x.Telefono!.ToLower().Contains(pagination.Filter.ToLower())
+                || x.Correo!.ToLower().Contains(pagination.Filter.ToLower())
+                );
             }
 
             return Ok(await queryable
@@ -47,7 +54,13 @@ namespace tickets.api.Controllers
 
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
-                queryable = queryable.Where(x => x.FullNameWithPhone.ToLower().Contains(pagination.Filter.ToLower()));
+                queryable = queryable.Where(x => x.Nombre.ToLower().Contains(pagination.Filter.ToLower())
+                || x.Apellido.ToLower().Contains(pagination.Filter.ToLower())
+                || x.Departamento!.ToLower().Contains(pagination.Filter.ToLower())
+                || x.Cargo!.ToLower().Contains(pagination.Filter.ToLower())
+                || x.Telefono!.ToLower().Contains(pagination.Filter.ToLower())
+                || x.Correo!.ToLower().Contains(pagination.Filter.ToLower())
+                );
             }
 
             double count = await queryable.CountAsync();

@@ -1,0 +1,422 @@
+﻿@page "/clientes/details/{Id:int}"
+@using tickets.web.Pages.Clientes.Contactos;
+@inject IRepository repository
+@inject ISnackbar Snackbar
+@inject SweetAlertService sweetAlertService
+@inject NavigationManager navigationManager
+@inject ISnackbar Snackbar
+
+@if (cliente is null)
+{
+    <Loader />
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+        <MudBreadcrumbs Items="_items" />
+
+        <MudGrid>
+            <MudItem xs="12">
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h5">
+
+                                @cliente.Nombre
+
+                            </MudText>
+                        </CardHeaderContent>
+
+                        <CardHeaderActions>
+                            <MudButton OnClick="@(() => ShowModal(cliente.Id, true))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning" Style="text-transform:none">
+                                Modificar
+                            </MudButton>
+                        </CardHeaderActions>
+
+                    </MudCardHeader>
+
+                    <MudCardContent>
+
+                        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                            
+                            <MudTabPanel Text="Detalles Generales">
+
+
+                                <EditForm Model="cliente" OnValidSubmit="EditAsync">
+                                    <DataAnnotationsValidator />
+                                    <MudStack Spacing="2">
+
+                                        <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                            <MudText Typo="Typo.h6">Información del Cliente</MudText>
+
+                                            @if (cliente.Estado.ToString() == "Activo")
+                                            {
+                                                <MudChip Color="Color.Success" Size="Size.Medium">@cliente.Estado.ToString()</MudChip>
+                                            }
+                                            else
+                                            {
+                                                <MudChip Color="Color.Error" Size="Size.Medium">@cliente.Estado.ToString()</MudChip>
+                                            }
+
+                                        </MudStack>
+
+                                        <MudStack Row="true">
+                                            <MudTextField @bind-Value="@cliente!.Nombre" For="@(() => @cliente!.Nombre)" Label="Nombre" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" Disabled="_isDisabled" />
+
+                                            <MudTextField @bind-Value="@cliente!.RNC" For="@(() => @cliente!.RNC)" Label="RNC" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" Disabled="_isDisabled" />
+
+                                        </MudStack>
+
+                                        <MudStack Row="true">
+                                            <MudTextField Mask="@(new PatternMask("(000) 000 0000"))" @bind-Value="@cliente!.Telefono" For="@(() => @cliente!.Telefono)" Label="Teléfono" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" Disabled="_isDisabled"/>
+
+                                            <MudTextField @bind-Value="@cliente!.Correo" For="@(() => @cliente!.Correo)" Label="Correo" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" Disabled="_isDisabled"/>
+                                        </MudStack>
+
+                                        <MudStack Row="true">
+                                            <MudTextField Lines="2" @bind-Value="@cliente!.Direccion" For="@(() => @cliente!.Direccion)" Label="Dirección" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" Disabled="_isDisabled" />
+
+                                            <MudTextField Lines="2" @bind-Value="@cliente!.Notas" For="@(() => @cliente!.Notas)" Label="Notas" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" Disabled="_isDisabled" />
+                                        </MudStack>
+
+                                        <MudStack Row="true">
+                                            <MudSelect For="@(() => @cliente.ClasificacionId)" @bind-Value="@(cliente!.ClasificacionId)" Required="true" Label="Clasificacioón" Dense="true" Placeholder="Seleccione una clasificación" AnchorOrigin="Origin.BottomCenter" Disabled="_isDisabled">
+
+                                                @if (clasificaciones is not null)
+                                                {
+                                                    @foreach (var clasificacion in clasificaciones)
+                                                    {
+                                                        <MudSelectItem Value="@clasificacion.Id">@clasificacion.Descripcion</MudSelectItem>
+                                                    }
+                                                }
+                                            </MudSelect>
+
+                                            <MudRadioGroup For="@(() => @cliente!.Estado)" @bind-SelectedOption="@(cliente!.Estado)" Disabled="_isDisabled">
+                                                <MudRadio Option="EstadosGenerales.Activo" Color="Color.Success">Activo</MudRadio>
+                                                <MudRadio Option="EstadosGenerales.Inactivo" Color="Color.Error">Inactivo</MudRadio>
+                                            </MudRadioGroup>
+                                        </MudStack>
+
+
+
+                                    </MudStack>
+
+                                    <MudButton Class="mt-4" Disabled="@_isLoading" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">
+
+                                        @if (_isLoading)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                            <MudText Class="ms-2">Guardando</MudText>
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Icon="@Icons.Material.Filled.Save" Title="Guardar" Size="Size.Small" Class="mr-3" />
+                                            <MudText>Guardar</MudText>
+                                        }
+                                    </MudButton>
+
+
+                                </EditForm>
+
+
+
+                            </MudTabPanel>
+                            
+                            <MudTabPanel Text="Tickets">
+                                <MudText>Listado de Tickets</MudText>
+                            </MudTabPanel>
+
+                            <MudTabPanel Text="Contactos">
+
+                                <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                    <MudText Typo="Typo.h6">Contactos asociados a este cliente</MudText>
+
+                                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Style="text-transform:none"
+                                           OnClick="@(() => ShowContactoModal(cliente.Id, false))">
+                                        Agregar Contacto
+                                    </MudButton>
+
+                                </MudStack>
+
+                                <MudTable ServerData="@(new Func<TableState, Task<TableData<Clientes_Contactos>>>(ContactosServerReload))"
+                                      Hover="true"
+                                      Breakpoint="Breakpoint.Sm"
+                                      Dense="true"
+                                      LoadingProgressColor="Color.Info"
+                                      @ref="tableContactos"
+                                      Elevation="0">
+                                    <ToolBarContent>
+
+                                        <MudTextField Class="mb-4" T="string" ValueChanged="@(s=>OnSearchContactos(s))" Placeholder="Buscar" Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Text"
+                                                  Clearable="true"></MudTextField>
+
+                                    </ToolBarContent>
+                                    <HeaderContent>
+                                        <MudTh>Nombre</MudTh>
+                                        <MudTh>Departamento</MudTh>
+                                        <MudTh>Cargo</MudTh>
+                                        <MudTh>Teléfono</MudTh>
+                                        <MudTh>Correo</MudTh>
+                                        <MudTh>Tickets</MudTh>
+                                        <MudTh>Estado</MudTh>
+                                        <MudTh>Acciones</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+
+                                        <MudTd DataLabel="Nombre">
+                                            @context.FullName
+                                        </MudTd>
+
+                                        <MudTd DataLabel="Departamento">
+                                            @context.Departamento
+                                        </MudTd>
+
+                                        <MudTd DataLabel="Cargo">
+                                            @context.Cargo
+                                        </MudTd>
+
+                                        <MudTd DataLabel="Telefono">
+                                            @context.Telefono
+                                        </MudTd>
+
+                                        <MudTd DataLabel="Correo">
+                                            @context.Correo
+                                        </MudTd>
+                                        <MudTd DataLabel="Tickets">
+                                            <MudChip Color="Color.Tertiary" Size="Size.Small">@context.CantidadTickets</MudChip>
+                                        </MudTd>
+
+                                        <MudTd DataLabel="Estado">
+                                            @if (@context.Estado.ToString() == "Activo")
+                                            {
+                                                <MudChip Color="Color.Success" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                            }
+                                            else if (@context.Estado.ToString() == "Inactivo")
+                                            {
+                                                <MudChip Color="Color.Error" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                            }
+                                            else
+                                            {
+                                                <MudChip Color="Color.Secondary" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                            }
+                                        </MudTd>
+
+                                        <MudTd DataLabel="Acciones">
+                                            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning" Size="Size.Small" Style="text-transform:none"
+                                                   OnClick="@(() => ShowContactoModal(context.Id, true))">
+                                                Modificar
+                                            </MudButton>
+
+
+                                        </MudTd>
+
+                                    </RowTemplate>
+                                    <NoRecordsContent>
+                                        <MudText>No matching records found</MudText>
+                                    </NoRecordsContent>
+                                    <LoadingContent>
+                                        <MudText>Loading...</MudText>
+                                    </LoadingContent>
+                                    <PagerContent>
+                                        <MudTablePager HideRowsPerPage="true" HidePagination="false" />
+                                    </PagerContent>
+                                </MudTable>
+                            </MudTabPanel>
+
+
+                            <MudTabPanel Text="Usuarios" Disabled="true">
+                                <MudText>Listado de Usuarios</MudText>
+                            </MudTabPanel>
+                        </MudTabs>
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+        </MudGrid>
+
+    </MudContainer>
+}
+
+
+@code {
+    private Clientes? cliente;
+    private List<Clientes_Clasificacion>? clasificaciones;
+    private bool _isLoading { get; set; }
+    private bool _isDisabled { get; set; }
+
+    //CONTACTOS
+    private IEnumerable<Clientes_Contactos> pagedDataContactos;
+    private MudTable<Clientes_Contactos> tableContactos;
+    private int totalItemsContactos;
+    private string searchStringContactos = null!;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [CascadingParameter]
+    IModalService Modal { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClienteAsync();
+        await LoadClasificacionesAsync();
+    }
+
+    private async Task LoadClienteAsync()
+    {
+        var httpResponse = await repository.Get<Clientes>($"/api/clientes/{Id}");
+
+        if (httpResponse.Error)
+        {
+            if (httpResponse.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/clientes");
+                return;
+            }
+            var messageError = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            return;
+        }
+
+        cliente = httpResponse.Response;
+    }
+
+    private async Task LoadClasificacionesAsync()
+    {
+        var responseHttp = await repository.Get<List<Clientes_Clasificacion>>("/api/clasificaciones/combo");
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        clasificaciones = responseHttp.Response;
+    }
+
+    private async Task EditAsync()
+    {
+        _isLoading = true;
+        _isDisabled = true;
+        cliente!.Clasificacion = null;
+
+        var httpResponse = await repository.Put("/api/clientes", cliente);
+        if (httpResponse.Error)
+        {
+            _isLoading = false;
+            _isDisabled = false;
+            var errorMessage = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", errorMessage, SweetAlertIcon.Error);
+            return;
+        }
+
+        _isLoading = false;
+        _isDisabled = false;
+        ToastLoad("Registro guardado correctamente", MudBlazor.Severity.Success);
+        await LoadClienteAsync();
+
+    }
+
+    private async Task ShowModal(int id = 0, bool isEdit = false)
+    {
+        IModalReference modalReference;
+
+        if (isEdit)
+        {
+            modalReference = Modal.Show<ClienteEdit>(string.Empty, new ModalParameters().Add("Id", id));
+        }
+        else
+        {
+            modalReference = Modal.Show<ClienteCreate>();
+        }
+
+        var result = await modalReference.Result;
+        if (result.Confirmed)
+        {
+            ToastLoad("Registro guardado correctamente", MudBlazor.Severity.Success);
+            await LoadClienteAsync();
+        }
+    }
+
+    private void ToastLoad(string Title, MudBlazor.Severity severity)
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopEnd;
+        Snackbar.Add(Title, severity);
+
+    }
+
+    private List<BreadcrumbItem> _items = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Inicio", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("Clientes", href: "/clientes"),
+        new BreadcrumbItem("Detalles de Cliente", href: null, disabled: true)
+    };
+
+    //CONTACTOS
+    private async Task<TableData<Clientes_Contactos>> ContactosServerReload(TableState state)
+    {
+        string url1 = string.Empty;
+        string url2 = string.Empty;
+
+        if (string.IsNullOrEmpty(searchStringContactos))
+        {
+            url1 = $"api/contactos?page={state.Page + 1}";
+            url2 = $"api/contactos/totalPages";
+        }
+        else
+        {
+            url1 = $"api/contactos?page={state.Page + 1}&filter={searchStringContactos}";
+            url2 = $"api/contactos/totalPages?filter={searchStringContactos}";
+        }
+
+        try
+        {
+            var responseHppt = await repository.Get<List<Clientes_Contactos>>(url1);
+            var responseHppt2 = await repository.Get<PagesDTO>(url2);
+
+            IEnumerable<Clientes_Contactos> data = responseHppt.Response!;
+
+            totalItemsContactos = (int)responseHppt2.Response!.TotalCounts!;
+
+            pagedDataContactos = data.ToArray();
+            return new TableData<Clientes_Contactos>() { TotalItems = totalItemsContactos, Items = pagedDataContactos };
+        }
+        catch (Exception ex)
+        {
+            await sweetAlertService.FireAsync("Error", "Contactos: " + ex.Message, SweetAlertIcon.Error);
+            return new TableData<Clientes_Contactos>() { TotalItems = totalItemsContactos, Items = pagedDataContactos };
+        }
+    }
+
+    private void OnSearchContactos(string text)
+    {
+        searchStringContactos = text;
+        tableContactos.ReloadServerData();
+    }
+
+    private async Task ShowContactoModal(int id = 0, bool isEdit = false)
+    {
+        IModalReference modalReference;
+
+        if (isEdit)
+        {
+            modalReference = Modal.Show<ContactoEdit>(string.Empty, new ModalParameters().Add("Id", id));
+        }
+        else
+        {
+            modalReference = Modal.Show<ContactoCreate>(string.Empty, new ModalParameters().Add("ClienteId", id));
+        }
+
+        var result = await modalReference.Result;
+        if (result.Confirmed)
+        {
+            ToastLoad("Registro guardado correctamente", MudBlazor.Severity.Success);
+            await tableContactos.ReloadServerData();
+        }
+    }
+
+}

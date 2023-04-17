@@ -163,10 +163,7 @@ namespace tickets.api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("ClasificacionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ClasificacionlId")
+                    b.Property<int>("ClasificacionId")
                         .HasColumnType("int");
 
                     b.Property<string>("Correo")
@@ -378,9 +375,6 @@ namespace tickets.api.Migrations
 
                     b.Property<string>("Telefono")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Telefono2")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("URL_Imagen")
@@ -674,7 +668,9 @@ namespace tickets.api.Migrations
                 {
                     b.HasOne("tickets.shared.Models.Clientes_Clasificacion", "Clasificacion")
                         .WithMany("Clientes")
-                        .HasForeignKey("ClasificacionId");
+                        .HasForeignKey("ClasificacionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Clasificacion");
                 });

@@ -1,0 +1,77 @@
+﻿@page "/departamentos/edit/{Id:int}"
+@inject NavigationManager navigationManager
+@inject IRepository repository
+@inject SweetAlertService sweetAlertService
+@attribute [Authorize(Roles = "Admin")]
+
+@if (model is null)
+{
+    <Loader />
+}
+else
+{
+    <MudText Typo="Typo.h5">
+        Modificar Departamento
+        <MudChip Color="Color.Warning">@model.Descripcion</MudChip>
+    </MudText>
+
+    <MudDivider DividerType="DividerType.Middle" Class="my-4" />
+
+    <DepartamentoForm @ref="modelForm" Model="model" OnValidSubmit="EditAsync" ReturnAction="Return" IsLoading="_isLoading" />
+
+}
+
+@code {
+    private Generales_Departamentos? model;
+    private DepartamentoForm? modelForm;
+    private bool _isLoading;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [CascadingParameter]
+    BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpResponse = await repository.Get<Generales_Departamentos>($"/api/departamentos/{Id}");
+        if (httpResponse.Error)
+        {
+            if (httpResponse.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/departamentos");
+                return;
+            }
+
+            var errorMessage = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", errorMessage, SweetAlertIcon.Error);
+            return;
+        }
+
+        model = httpResponse.Response;
+    }
+
+    private async Task EditAsync()
+    {
+        _isLoading = true;
+        var httpResponse = await repository.Put("/api/departamentos", model);
+        if (httpResponse.Error)
+        {
+            _isLoading = false;
+            var errorMessage = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", errorMessage, SweetAlertIcon.Error);
+            return;
+        }
+
+        await BlazoredModal.CloseAsync(ModalResult.Ok());
+        _isLoading = false;
+        Return();
+    }
+
+    private void Return()
+    {
+        modelForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/departamentos");
+    }
+}
+

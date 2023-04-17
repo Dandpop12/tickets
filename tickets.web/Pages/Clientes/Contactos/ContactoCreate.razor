@@ -1,0 +1,48 @@
+﻿@page "/contactos/create/{ClienteId:int}"
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Super_User, Admin")]
+
+<MudText Typo="Typo.h5">Nuevo Contacto</MudText>
+<MudDivider Class="mb-4"/>
+
+<ContactoForm @ref="modelForm" Model="model" OnValidSubmit="CreateAsync" ReturnAction="Return" />
+
+@code {
+    private Clientes_Contactos model = new();
+    private ContactoForm? modelForm;
+    private bool _isLoading;
+
+    [Parameter]
+    public int ClienteId { get; set; }
+
+    [CascadingParameter]
+    BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+    private async Task CreateAsync()
+    {
+
+        _isLoading = true;
+        model.ClienteId = ClienteId;
+        var httpResponse = await repository.Post("/api/contactos", model);
+        if (httpResponse.Error)
+        {
+            _isLoading = false;
+            var msg = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", msg, SweetAlertIcon.Error);
+            return;
+        }
+
+        _isLoading = false;
+        await BlazoredModal.CloseAsync(ModalResult.Ok());
+        Return();
+    }
+
+    private void Return()
+    {
+        modelForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo($"/clientes/details/{ClienteId}");
+    }
+}

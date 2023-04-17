@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using tickets.api.Data;
@@ -8,7 +9,7 @@ using tickets.shared.Models;
 
 namespace tickets.api.Controllers
 {
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/clientes")]
     [ApiController]
     public class ClientesController : ControllerBase
@@ -23,6 +24,10 @@ namespace tickets.api.Controllers
         [HttpGet]
         public async Task<ActionResult> GetAsync([FromQuery] PaginationDTO pagination)
         {
+            var clientes = await _context.Clientes
+                .Include(c => c.Clasificacion)
+                .ToListAsync();
+
             var queryable = _context.Clientes
                 .Include(e => e.Clasificacion)
                 .Include(e => e.Contactos)
@@ -92,6 +97,7 @@ namespace tickets.api.Controllers
         {
             try
             {
+                cliente.FechaRegistro = DateTime.Now;
                 _context.Add(cliente);
                 await _context.SaveChangesAsync();
                 return Ok(cliente);

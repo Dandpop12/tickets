@@ -1,17 +1,13 @@
-﻿using tickets.api.Helpers;
-using tickets.shared.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-
-using tickets.shared.DTOs;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
+using tickets.api.Helpers;
+using tickets.shared.DTOs;
+using tickets.shared.Models;
 
 namespace tickets.api.Controllers
 {

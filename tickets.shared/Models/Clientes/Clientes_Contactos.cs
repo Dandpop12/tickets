@@ -13,8 +13,6 @@ namespace tickets.shared.Models
         [Key]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "El campo {0} es obligatorio")]
-        [Range(1, double.MaxValue, ErrorMessage = "You must select a {0}")]
         [Display(Name = "Cliente")]
         public int ClienteId { get; set; }
 

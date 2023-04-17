@@ -1,0 +1,43 @@
+﻿@page "/empleados/create"
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Super_User, Admin")]
+
+<MudText Typo="Typo.h5">Nuevo Empleado</MudText>
+<MudDivider Class="mb-4"/>
+
+<EmpleadoForm @ref="modelForm" Model="model" OnValidSubmit="CreateAsync" ReturnAction="Return" />
+
+@code {
+    private Generales_Empleados model = new();
+    private EmpleadoForm? modelForm;
+    private bool _isLoading;
+
+    [CascadingParameter]
+    BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+    private async Task CreateAsync()
+    {
+        _isLoading = true;
+        var httpResponse = await repository.Post("/api/empleados", model);
+        if (httpResponse.Error)
+        {
+            _isLoading = false;
+            var msg = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", msg, SweetAlertIcon.Error);
+            return;
+        }
+
+        _isLoading = false;
+        await BlazoredModal.CloseAsync(ModalResult.Ok());
+        Return();
+    }
+
+    private void Return()
+    {
+        modelForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/empleados");
+    }
+}

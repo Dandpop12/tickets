@@ -1,0 +1,66 @@
+﻿<AuthorizeView>
+    <Authorized>
+
+
+        <MudButton Href="userdetails" Style="text-transform:none" StartIcon="@Icons.Material.Filled.Person" Color="Color.Inherit" Variant="Variant.Text">@context.User.Identity!.Name</MudButton>
+
+        <MudIconButton Href="Logout" Style="text-transform:none" Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Edge="Edge.End" />
+
+        @*Hola, <a href="EditUser" class="nav-link btn btn-link">@context.User.Identity!.Name</a>
+        @if (!string.IsNullOrEmpty(photoUser))
+        {
+        <div class="mx-2">
+        <img src="@photoUser" width="50" height="50" style="border-radius:50%" />
+        </div>
+        }
+        <a href="Logout" class="nav-link btn btn-link">Cerrar Sesión</a>*@
+    </Authorized>
+    <NotAuthorized>
+        <MudButton Href="Register" Style="text-transform:none" StartIcon="@Icons.Material.Filled.AppRegistration" Color="Color.Inherit" Variant="Variant.Text">Registrar</MudButton>
+        <MudButton Href="Login" Style="text-transform:none" StartIcon="@Icons.Material.Filled.Login" Color="Color.Inherit" Variant="Variant.Text">Iniciar Sesión</MudButton>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+
+
+@*<AuthorizeView>
+    <Authorized>
+
+
+        <MudButton Href="EditUser" Style="text-transform:none" StartIcon="@Icons.Material.Filled.Person" Color="Color.Inherit" Variant="Variant.Text">@context.User.Identity!.Name</MudButton>
+        
+        <MudIconButton Href="Logout" Style="text-transform:none" Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Edge="Edge.End" />
+
+        @*Hola, <a href="EditUser" class="nav-link btn btn-link">@context.User.Identity!.Name</a>
+        @if (!string.IsNullOrEmpty(photoUser))
+        {
+            <div class="mx-2">
+                <img src="@photoUser" width="50" height="50" style="border-radius:50%" />
+            </div>
+        }
+        <a href="Logout" class="nav-link btn btn-link">Cerrar Sesión</a>
+    </Authorized>
+    <NotAuthorized>
+        <MudButton Href="Register" Style="text-transform:none" StartIcon="@Icons.Material.Filled.AppRegistration" Color="Color.Inherit" Variant="Variant.Text">Registrar</MudButton>
+        <MudButton Href="Login" Style="text-transform:none" StartIcon="@Icons.Material.Filled.Login" Color="Color.Inherit" Variant="Variant.Text">Iniciar Sesión</MudButton>
+    </NotAuthorized>
+</AuthorizeView>
+*@
+@*@code {
+    private string? photoUser;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; } = null!;
+
+    protected async override Task OnParametersSetAsync()
+    {
+        var authenticationState = await authenticationStateTask;
+        var claims = authenticationState.User.Claims.ToList();
+        var photoClaim = claims.FirstOrDefault(x => x.Type == "Photo");
+        if (photoClaim is not null)
+        {
+            photoUser = photoClaim.Value;
+        }
+    }
+}*@

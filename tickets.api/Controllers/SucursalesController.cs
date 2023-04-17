@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace tickets.api.Controllers
 {
-    //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/sucursales")]
     [ApiController]
     public class SucursalesController : ControllerBase

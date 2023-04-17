@@ -1,0 +1,161 @@
+﻿@page "/userdetails"
+@inject IRepository repository
+@inject SweetAlertService sweetAlertService
+@inject NavigationManager navigationManager
+@inject ILoginService loginService
+
+@if (user is null)
+{
+    <Loader />
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+        <MudBreadcrumbs Items="_items" />
+
+        <MudGrid>
+            <MudItem xs="12">
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderAvatar>
+
+                            @if (user.URL_Imagen is null)
+                            {
+                                <MudAvatar Rounded="true" Size="Size.Large" Color="Color.Primary">
+                                    @user.FirstName.Substring(0,1)
+                                </MudAvatar>
+                            }
+                            else
+                            {
+                                <MudImage Src="@user.URL_Imagen" Width="100" Height="100" Alt="@user.FullName" Elevation="25" Class="rounded-lg" />
+                            }
+
+                        </CardHeaderAvatar>
+
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h5">
+                                @user.FullName <MudIcon Icon="@Icons.Material.Filled.Verified" Title="Usuario Verificado" Color="Color.Success" />
+                            </MudText>
+                            <MudText Typo="Typo.body1">@user.UserName</MudText>
+
+                            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Email" Color="Color.Dark" Style="text-transform:none">
+                                @user.Email
+                            </MudButton>
+
+                            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Phone" Color="Color.Dark" Style="text-transform:none">
+                                @user.PhoneNumber
+                            </MudButton>
+
+                            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.VerifiedUser" Color="Color.Dark" Style="text-transform:none">
+                                @user.UserType.ToString()
+                            </MudButton>
+
+                        </CardHeaderContent>
+
+                        <CardHeaderActions>
+                            <MudButton OnClick="@(() => ShowModal())" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Lock" Color="Color.Primary" Style="text-transform:none">
+                                Cambiar contraseña
+                            </MudButton>
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                </MudCard>
+
+            </MudItem>
+        </MudGrid>
+
+    </MudContainer>
+}
+
+@code {
+    private User? user;
+    private List<Generales_Departamentos>? departamentos;
+    private string? imageUrl;
+
+    [CascadingParameter]
+    IModalService Modal { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserAsync();
+        await LoadDepartamentosAsync();
+
+        if (!string.IsNullOrEmpty(user!.URL_Imagen))
+        {
+            imageUrl = user!.URL_Imagen;
+            user.URL_Imagen = null;
+        }
+
+    }
+    private async Task LoadUserAsync()
+    {
+        var responseHTTP = await repository.Get<User>($"/api/accounts");
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/");
+                return;
+            }
+            var messageError = await responseHTTP.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            return;
+        }
+        user = responseHTTP.Response;
+    }
+
+    private void ImageSelected(string imagenBase64)
+    {
+        user!.URL_Imagen = imagenBase64;
+        imageUrl = null;
+    }
+
+    private async Task LoadDepartamentosAsync()
+    {
+        var responseHttp = await repository.Get<List<Generales_Departamentos>>("/api/departamentos/combo");
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        departamentos = responseHttp.Response;
+    }
+
+    private async Task SaveUserAsync()
+    {
+        //var responseHttp = await repository.Put<User>("/api/accounts", user!);
+        var responseHttp = await repository.Put<User, TokenDTO>("/api/accounts", user!);
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        await loginService.LoginAsync(responseHttp.Response!.Token);
+        navigationManager.NavigateTo("/");
+    }
+
+    private List<BreadcrumbItem> _items = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Inicio", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("Cuenta", href: null, disabled: true),
+        new BreadcrumbItem("Detalles de Usuario", href: null, disabled: true)
+    };
+
+    private async Task ShowModal()
+    {
+        IModalReference modalReference;
+
+        modalReference = Modal.Show<ChangePassword>();
+
+        var result = await modalReference.Result;
+        if (result.Confirmed)
+        {
+            await LoadUserAsync();
+            await LoadDepartamentosAsync();
+        }
+    }
+
+}

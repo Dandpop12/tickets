@@ -22,6 +22,7 @@ namespace tickets.api.Data
         {
             await _context.Database.EnsureCreatedAsync();
             await CheckEmpresasAsync();
+            await CheckClasificacionesAsync();
 
             await CheckRolesAsync();
             await CheckUserAsync(1422, "Dangiro", "Polanco", "Administrator", "dangiro_polanco@outlook.com", "829 533 5029", UserType.Super_User);
@@ -80,6 +81,19 @@ namespace tickets.api.Data
                     Correo = "info@empresa.com",
                     URL_Imagen = string.Empty,
                 });
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task CheckClasificacionesAsync()
+        {
+            if (!_context.Clientes_Clasificaciones.Any())
+            {
+                _context.Clientes_Clasificaciones.Add(new Clientes_Clasificacion { Descripcion = "Verde", Color = "#30a671" });
+                _context.Clientes_Clasificaciones.Add(new Clientes_Clasificacion { Descripcion = "Amarillo", Color = "#dca10d" });
+                _context.Clientes_Clasificaciones.Add(new Clientes_Clasificacion { Descripcion = "Rojo", Color = "#ef4343" });
+                _context.Clientes_Clasificaciones.Add(new Clientes_Clasificacion { Descripcion = "Otros", Color = "#811aa1" });
             }
 
             await _context.SaveChangesAsync();

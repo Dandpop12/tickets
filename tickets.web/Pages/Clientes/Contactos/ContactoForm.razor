@@ -1,0 +1,142 @@
+﻿@inject SweetAlertService sweetAlertService
+@inject IRepository repository
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
+<EditForm EditContext="editContext" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <MudStack Row="true">
+        <MudTextField @bind-Value="@Model!.Nombre" For="@(() => @Model!.Nombre)" Label="Nombre" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" />
+
+        <MudTextField @bind-Value="@Model!.Apellido" For="@(() => @Model!.Apellido)" Label="Apellido" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" />
+    </MudStack>
+
+    <MudStack Row="true">
+        <MudTextField @bind-Value="@Model!.Departamento" For="@(() => @Model!.Departamento)" Label="Departamento" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+
+        <MudTextField @bind-Value="@Model!.Cargo" For="@(() => @Model!.Cargo)" Label="Cargo" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+    </MudStack>
+
+    <MudStack Row="true">
+        <MudTextField Mask="@(new PatternMask("(000) 000 0000"))" @bind-Value="@Model!.Telefono" For="@(() => @Model!.Telefono)" Label="Teléfono" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+
+        <MudTextField Mask="@(new PatternMask("(000) 000 0000"))" @bind-Value="@Model.Flota" For="@(() => @Model.Flota)" Label="Flota" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+    </MudStack>
+
+    <MudTextField @bind-Value="@Model!.Correo" For="@(() => @Model!.Correo)" Label="Correo" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+
+    <MudTextField Lines="2" @bind-Value="@Model!.Notas" For="@(() => @Model!.Notas)" Label="Notas" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+
+
+   @*<MudSelect For="@(() => @Model.ClienteId)" @bind-Value="@(Model!.ClienteId)" Required="true" Label="Cliente" Dense="true" Placeholder="Seleccione un cliente" AnchorOrigin="Origin.BottomCenter">
+
+        @if (clientes is not null)
+        {
+            @foreach (var cliente in clientes)
+            {
+                <MudSelectItem Value="@cliente.Id">@cliente.Nombre</MudSelectItem>
+            }
+        }
+    </MudSelect>*@
+
+
+    <MudRadioGroup For="@(() => @Model!.Estado)" @bind-SelectedOption="@(Model!.Estado)">
+        <MudRadio Option="EstadosGenerales.Activo" Color="Color.Success">Activo</MudRadio>
+        <MudRadio Option="EstadosGenerales.Inactivo" Color="Color.Error">Inactivo</MudRadio>
+    </MudRadioGroup>
+
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="pt-4">
+        <MudButton Disabled="@IsLoading" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">
+
+            @if (IsLoading)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Guardando</MudText>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Save" Title="Guardar" Size="Size.Small" Class="mr-3" />
+                <MudText>Guardar</MudText>
+            }
+        </MudButton>
+
+        <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.ArrowBack" Variant="Variant.Filled" Color="Color.Info" OnClick="ReturnAction">
+            Volver
+        </MudButton>
+    </MudStack>
+</EditForm>
+
+@code {
+
+    private EditContext editContext = null!;
+    private List<Clientes>? clientes;
+
+    [Parameter]
+    [EditorRequired]
+    public Clientes_Contactos? Model { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback OnValidSubmit { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public EventCallback ReturnAction { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    public bool FormPostedSuccessfully { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        editContext = new(Model!);
+        await LoadClientesAsync();
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var formWasModified = editContext.IsModified();
+        if (!formWasModified || FormPostedSuccessfully)
+        {
+            return;
+        }
+
+        var result = await sweetAlertService.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmación",
+                Text = "¿Deseas abandonar la página y perder los cambios?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                CancelButtonText = "Volver atrás",
+                CancelButtonColor = "#1E88E5",
+                ConfirmButtonText = "Si, abandonar página",
+                ConfirmButtonColor = "#43A047"
+            });
+
+        var confirm = !string.IsNullOrEmpty(result.Value);
+        if (confirm)
+        {
+            return;
+        }
+
+        context.PreventNavigation();
+    }
+
+    private async Task LoadClientesAsync()
+    {
+        var responseHttp = await repository.Get<List<Clientes>>("/api/clientes/combo");
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        clientes = responseHttp.Response;
+    }
+
+}
+

@@ -16,7 +16,7 @@ namespace tickets.shared.Models
 
         [Display(Name = "Clasificación")]
         [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar una {0}.")]
-        public int ClasificacionlId { get; set; }
+        public int ClasificacionId { get; set; }
 
         [Required(ErrorMessage = "The field {0} is required")]
         [Display(Name = "Estado")]

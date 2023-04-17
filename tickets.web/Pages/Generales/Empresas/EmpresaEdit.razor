@@ -1,0 +1,77 @@
+﻿@page "/empresas/edit/{Id:int}"
+@inject NavigationManager navigationManager
+@inject IRepository repository
+@inject SweetAlertService sweetAlertService
+@attribute [Authorize(Roles = "Admin")]
+
+@if (model is null)
+{
+    <Loader />
+}
+else
+{
+    <MudText Typo="Typo.h5">
+        Modificar Empresa
+        <MudChip Color="Color.Warning">@model.Nombre</MudChip>
+    </MudText>
+
+    <MudDivider Class="mb-4" />
+
+    <EmpresaForm @ref="modelForm" Model="model" OnValidSubmit="EditAsync" ReturnAction="Return" IsLoading="_isLoading" />
+
+}
+
+@code {
+    private Generales_Empresas? model;
+    private EmpresaForm? modelForm;
+    private bool _isLoading;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [CascadingParameter]
+    BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpResponse = await repository.Get<Generales_Empresas>($"/api/empresas/{Id}");
+        if (httpResponse.Error)
+        {
+            if (httpResponse.HttpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/empresas");
+                return;
+            }
+
+            var errorMessage = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", errorMessage, SweetAlertIcon.Error);
+            return;
+        }
+
+        model = httpResponse.Response;
+    }
+
+    private async Task EditAsync()
+    {
+        _isLoading = true;
+        var httpResponse = await repository.Put("/api/empresas", model);
+        if (httpResponse.Error)
+        {
+            _isLoading = false;
+            var errorMessage = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", errorMessage, SweetAlertIcon.Error);
+            return;
+        }
+
+        _isLoading = false;
+        await BlazoredModal.CloseAsync(ModalResult.Ok());
+        Return();
+    }
+
+    private void Return()
+    {
+        modelForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/empresas");
+    }
+}
+

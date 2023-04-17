@@ -2,7 +2,7 @@
 {
     public enum EstadosGenerales
     {
-        Inactivo,
-        Activo
+        Activo,
+        Inactivo
     }
 }

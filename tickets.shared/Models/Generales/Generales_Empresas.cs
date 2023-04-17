@@ -20,8 +20,6 @@ namespace tickets.shared.Models
         [Required(ErrorMessage = "El campo {0} es obligatorio")]
         public string Telefono { get; set; } = null!;
 
-        public string? Telefono2 { get; set; }
-
         [Required(ErrorMessage = "El campo {0} es obligatorio")]
         [DataType(DataType.MultilineText)]
         public string Direccion { get; set; } = null!;

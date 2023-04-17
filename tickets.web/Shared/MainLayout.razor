@@ -1,12 +1,46 @@
 ﻿@inherits LayoutComponentBase
+<MudThemeProvider Theme="MyCustomTheme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-<div class="page">
+<MudLayout>
+
+
+    <MudAppBar Elevation="0" Dense="true" Color="Color.Info">
+
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+
+        <MudSpacer />
+
+        <AuthLinks />
+
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="_themeManager.DrawerClipMode" Elevation="1" Class="bg-white">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h5" Class="mt-1">Tickets</MudText>
+        </MudDrawerHeader>
+
+        <NavMenu />
+    </MudDrawer>
+
+    <MudMainContent Class="bg-light">
+        @Body
+    </MudMainContent>
+
+    <MudThemeManagerButton OnClick="@((e) => OpenThemeManager(true))" />
+    <MudThemeManager Open="_themeManagerOpen" OpenChanged="OpenThemeManager" Theme="_themeManager" ThemeChanged="UpdateTheme" />
+</MudLayout>
+
+
+@*<div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
         <div class="top-row px-4">
+            <AuthLinks />
             <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
         </div>
 
@@ -15,3 +49,45 @@
         </article>
     </main>
 </div>
+*@
+@code {
+    bool _drawerOpen = true;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private ThemeManagerTheme _themeManager = new ThemeManagerTheme();
+    public bool _themeManagerOpen = false;
+
+    void OpenThemeManager(bool value)
+    {
+        _themeManagerOpen = value;
+    }
+
+    void UpdateTheme(ThemeManagerTheme value)
+    {
+        _themeManager = value;
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        StateHasChanged();
+    }
+
+    MudTheme MyCustomTheme = new MudTheme()
+        {
+            Palette = new Palette()
+            {
+                Secondary = Colors.Pink.Darken1,
+                Tertiary = Colors.Teal.Darken1,
+                Info = Colors.Blue.Darken1,
+                Success = Colors.Green.Darken1,
+                Warning = Colors.Orange.Darken1,
+                Error = Colors.Red.Darken1,
+
+            }
+        };
+}
