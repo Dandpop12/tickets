@@ -9,13 +9,12 @@
     <MudTextField @bind-Value="@Model!.Nombre" For="@(() => @Model!.Nombre)" Label="Nombre" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" />
 
     <MudStack Row="true">
-        <MudTextField @bind-Value="@Model!.RNC" For="@(() => @Model!.RNC)" Label="RNC" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" />
+        <MudTextField @bind-Value="@Model!.RNC" For="@(() => @Model!.RNC)" Label="RNC" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
 
         <MudTextField Mask="@(new PatternMask("(000) 000 0000"))" @bind-Value="@Model!.Telefono" For="@(() => @Model!.Telefono)" Label="Teléfono" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
     </MudStack>
 
     <MudTextField @bind-Value="@Model!.Correo" For="@(() => @Model!.Correo)" Label="Correo" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
-
 
     <MudTextField Lines="2" @bind-Value="@Model!.Direccion" For="@(() => @Model!.Direccion)" Label="Dirección" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
 

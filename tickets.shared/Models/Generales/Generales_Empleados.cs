@@ -29,7 +29,7 @@ namespace tickets.shared.Models
 
         public Generales_Departamentos? Departamento { get; set; }
         public Generales_Sucursales? Sucursal { get; set; }
-        public User? Usuario { get; set; }
+        public User? User { get; set; }
 
         public ICollection<Tickets>? Tickets { get; set; }
         public int CantidadTickets => Tickets == null ? 0 : Tickets.Count;

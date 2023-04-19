@@ -56,7 +56,7 @@ else
         _isLoading = true;
         model!.Departamento = null;
         model!.Sucursal = null;
-        model!.Usuario = null;
+        model!.User = null;
 
         var httpResponse = await repository.Put("/api/empleados", model);
         if (httpResponse.Error)

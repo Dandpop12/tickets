@@ -1,0 +1,172 @@
+﻿@page "/tickets/seleccionClientes"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+@attribute [Authorize(Roles = "Super_User, Admin")]
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudBreadcrumbs Items="_items" />
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudCard Elevation="25" Class="rounded-lg">
+                <MudCardHeader Class="pb-0">
+
+                    <MudText Typo="Typo.h6">Listado de Clientes</MudText>
+                    <MudSpacer />
+
+                </MudCardHeader>
+
+                <MudCardContent>
+
+
+                    <MudTable ServerData="@(new Func<TableState, Task<TableData<Clientes>>>(ServerReload))"
+                              Hover="true"
+                              Breakpoint="Breakpoint.Sm"
+                              Dense="true"
+                              LoadingProgressColor="Color.Info"
+                              @ref="table"
+                              Elevation="0">
+                        <ToolBarContent>
+
+                            <MudTextField Class="mb-4" T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Buscar" Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Text"
+                                          Clearable="true"></MudTextField>
+
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>Nombre</MudTh>
+                            <MudTh>Clasificación</MudTh>
+                            <MudTh>Teléfono</MudTh>
+                            <MudTh>Correo</MudTh>
+                            <MudTh>Estado</MudTh>
+                            <MudTh>Acciones</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Nombre">
+                                @context.Nombre
+                            </MudTd>
+
+                            <MudTd DataLabel="Clasificación">
+                                @context.Clasificacion!.Descripcion
+                            </MudTd>
+
+                            <MudTd DataLabel="Teléfono">
+                                @context.Telefono
+                            </MudTd>
+
+                            <MudTd DataLabel="Correo">
+                                @context.Correo
+                            </MudTd>
+
+                            <MudTd DataLabel="Estado">
+                                @if (@context.Estado.ToString() == "Activo")
+                                {
+                                    <MudChip Color="Color.Success" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                }
+                                else if (@context.Estado.ToString() == "Inactivo")
+                                {
+                                    <MudChip Color="Color.Error" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip Color="Color.Secondary" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                }
+                            </MudTd>
+
+                            <MudTd DataLabel="Acciones">
+                                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small" Style="text-transform:none"
+                                           OnClick="@(() => GoToCreateTickets(context))">
+                                    Seleccionar
+                                </MudButton>
+
+                            </MudTd>
+
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText>No matching records found</MudText>
+                        </NoRecordsContent>
+                        <LoadingContent>
+                            <MudText>Loading...</MudText>
+                        </LoadingContent>
+                        <PagerContent>
+                            <MudTablePager HideRowsPerPage="true" HidePagination="false" />
+                        </PagerContent>
+                    </MudTable>
+
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+
+
+@code {
+    private IEnumerable<Clientes> pagedData;
+    private MudTable<Clientes> table;
+    private int totalItems;
+    private string searchString = null!;
+
+    [CascadingParameter]
+    IModalService Modal { get; set; } = default!;
+
+    private async Task<TableData<Clientes>> ServerReload(TableState state)
+    {
+        string url1 = string.Empty;
+        string url2 = string.Empty;
+
+        if (string.IsNullOrEmpty(searchString))
+        {
+            url1 = $"api/clientes?page={state.Page + 1}";
+            url2 = $"api/clientes/totalPages";
+        }
+        else
+        {
+            url1 = $"api/clientes?page={state.Page + 1}&filter={searchString}";
+            url2 = $"api/clientes/totalPages?filter={searchString}";
+        }
+
+        try
+        {
+            var responseHppt = await repository.Get<List<Clientes>>(url1);
+            var responseHppt2 = await repository.Get<PagesDTO>(url2);
+
+            IEnumerable<Clientes> data = responseHppt.Response!;
+
+            totalItems = (int)responseHppt2.Response!.TotalCounts!;
+
+            pagedData = data.ToArray();
+            return new TableData<Clientes>() { TotalItems = totalItems, Items = pagedData };
+        }
+        catch (Exception ex)
+        {
+            await sweetAlertService.FireAsync("Error", ex.Message, SweetAlertIcon.Error);
+            return new TableData<Clientes>() { TotalItems = totalItems, Items = pagedData };
+        }
+    }
+
+    private void OnSearch(string text)
+    {
+        searchString = text;
+        table.ReloadServerData();
+    }
+
+    private void GoToCreateTickets(Clientes cliente)
+    {
+        navigationManager.NavigateTo($"/tickets/create/{cliente.Id}");
+    }
+
+    private void PageChanged(int i)
+    {
+        table.NavigateTo(i - 1);
+    }
+
+    private List<BreadcrumbItem> _items = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Inicio", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("Tickets", href: "/tickets"),
+        new BreadcrumbItem("Selección de Clientes", href: null, disabled: true),
+    };
+}

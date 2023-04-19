@@ -1,0 +1,289 @@
+﻿@page "/tickets/create/{Id:int}"
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Super_User, Admin")]
+
+@if (cliente is null)
+{
+    <Loader />
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+        <MudBreadcrumbs Items="_items" />
+
+        <MudGrid>
+            <MudItem xs="12">
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h5">
+
+                                @cliente.Nombre
+
+                            </MudText>
+                        </CardHeaderContent>
+
+                        <CardHeaderActions>
+                            @if (cliente.Estado.ToString() == "Activo")
+                            {
+                                <MudChip Color="Color.Success" Size="Size.Medium">@cliente.Estado.ToString()</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip Color="Color.Error" Size="Size.Medium">@cliente.Estado.ToString()</MudChip>
+                            }
+                        </CardHeaderActions>
+
+                    </MudCardHeader>
+
+                    <MudCardContent>
+
+                        <EditForm Model="ticket" OnValidSubmit="SaveTicketAsync">
+                            <DataAnnotationsValidator />
+                            <MudStack Spacing="2">
+
+                                <MudStack Row="true" AlignItems="AlignItems.Center">
+                                    <MudSelect For="@(() => ticket!.ContactoId)" @bind-Value="@(ticket!.ContactoId)" Required="true" Label="Contacto" Dense="true" Placeholder="Seleccione una clasificación" AnchorOrigin="Origin.BottomCenter" Disabled="_isDisabled">
+
+                                        @if (cliente.Contactos is not null)
+                                        {
+                                            @foreach (var contacto in cliente.Contactos)
+                                            {
+                                                <MudSelectItem Value="@contacto.Id">@contacto.FullName</MudSelectItem>
+                                            }
+                                        }
+                                    </MudSelect>
+
+                                    <MudTooltip Text="Agregar Nuevo Contacto al Cliente" Color="Color.Secondary" Placement="Placement.Bottom" Arrow="true">
+                                        <MudFab StartIcon="@Icons.Material.Filled.Add" Color="Color.Secondary" Size="Size.Small" OnClick="@(() => ShowModal())" />
+                                    </MudTooltip>
+                                </MudStack>
+
+                                <MudStack Row="true" AlignItems="AlignItems.Center">
+                                    <MudSelect For="@(() => ticket!.ClasificacionId)" @bind-Value="@(ticket!.ClasificacionId)" Required="true" Label="Clasificación de Ticket" Dense="true" Placeholder="Seleccione una clasificación" AnchorOrigin="Origin.BottomCenter" Disabled="_isDisabled">
+
+                                        @if (clasificaciones is not null)
+                                        {
+                                            @foreach (var clasificacion in clasificaciones)
+                                            {
+                                                <MudSelectItem Value="@clasificacion.Id">@clasificacion.Descripcion</MudSelectItem>
+                                            }
+                                        }
+                                    </MudSelect>
+
+                                    <MudTooltip Text="Agregar Nueva Clasificación de Ticket" Color="Color.Tertiary" Placement="Placement.Bottom" Arrow="true">
+                                        <MudFab StartIcon="@Icons.Material.Filled.Add" Color="Color.Tertiary" Size="Size.Small" OnClick="@(() => ShowModal(true))" />
+                                    </MudTooltip>
+
+
+                                </MudStack>
+
+                                <MudStack>
+                                    <MudTextField @bind-Value="@ticket!.Titulo" For="@(() => @ticket!.Titulo)" Label="Título" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" Disabled="_isDisabled" />
+
+                                    <MudTextField Lines="2" @bind-Value="@ticket!.Notas" For="@(() => @ticket!.Notas)" Label="Notas" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" Disabled="_isDisabled" />
+
+
+                                </MudStack>
+
+                                <MudStack Row="true">
+                                    <MudSelect For="@(() => ticket!.EmpleadoId)" @bind-Value="@(ticket!.EmpleadoId)" Required="true" Label="Empleado Asignado" Dense="true" Placeholder="Seleccione un empleado" AnchorOrigin="Origin.BottomCenter" Disabled="_isDisabled">
+
+                                        @if (empleados is not null)
+                                        {
+                                            @foreach (var empleado in empleados)
+                                            {
+                                                <MudSelectItem Value="@empleado.Id">@empleado.Nombre</MudSelectItem>
+                                            }
+                                        }
+                                    </MudSelect>
+
+                                    <MudRadioGroup For="@(() => ticket!.Prioridad)" @bind-SelectedOption="@(ticket!.Prioridad)" Disabled="_isDisabled">
+                                        <MudRadio Option="Prioridades.Alta" Color="Color.Error">Alta</MudRadio>
+                                        <MudRadio Option="Prioridades.Media" Color="Color.Warning">Media</MudRadio>
+                                        <MudRadio Option="Prioridades.Baja" Color="Color.Info">Baja</MudRadio>
+                                    </MudRadioGroup>
+
+                                </MudStack>
+
+                            </MudStack>
+
+                            <MudButton Class="mt-4" Disabled="@_isLoading" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">
+
+                                @if (_isLoading)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    <MudText Class="ms-2">Guardando</MudText>
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Save" Title="Guardar" Size="Size.Small" Class="mr-3" />
+                                    <MudText>Guardar</MudText>
+                                }
+                            </MudButton>
+
+
+                        </EditForm>
+
+                    </MudCardContent>
+
+                </MudCard>
+
+            </MudItem>
+        </MudGrid>
+
+
+    </MudContainer>
+}
+
+@code {
+
+
+
+    private bool _isLoading { get; set; }
+    private bool _isDisabled { get; set; }
+
+    private Clientes? cliente;
+    private List<Tickets_Clasificacion>? clasificaciones;
+    private List<Generales_Empleados>? empleados;
+
+    private Tickets ticket = new();
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [CascadingParameter]
+    IModalService Modal { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClienteAsync();
+        await LoadClasificacionesAsync();
+        await LoadEmpleadosAsync();
+    }
+
+    private async Task LoadClienteAsync()
+    {
+        var httpResponse = await repository.Get<Clientes>($"/api/clientes/{Id}");
+
+        if (httpResponse.Error)
+        {
+            if (httpResponse.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/clientes");
+                return;
+            }
+            var messageError = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", messageError, SweetAlertIcon.Error);
+            return;
+        }
+
+        cliente = httpResponse.Response;
+
+        if (cliente is not null)
+        {
+            ticket.ClienteId = cliente.Id;
+        }
+
+
+    }
+
+    private async Task LoadClasificacionesAsync()
+    {
+        var responseHttp = await repository.Get<List<Tickets_Clasificacion>>("/api/clasificacionesTickets/combo");
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        clasificaciones = responseHttp.Response;
+    }
+
+    private async Task LoadEmpleadosAsync()
+    {
+        var responseHttp = await repository.Get<List<Generales_Empleados>>("/api/empleados/combo");
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+
+        empleados = responseHttp.Response;
+    }
+
+    private async Task SaveTicketAsync()
+    {
+        _isLoading = true;
+        _isDisabled = true;
+
+        var httpResponse = await repository.Post("/api/tickets", ticket);
+        if (httpResponse.Error)
+        {
+            _isLoading = false;
+            _isDisabled = false;
+            var errorMessage = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", errorMessage, SweetAlertIcon.Error);
+            return;
+        }
+
+        _isLoading = false;
+        _isDisabled = false;
+        ToastLoad("Registro guardado correctamente", MudBlazor.Severity.Success);
+
+        navigationManager.NavigateTo($"/tickets");
+    }
+
+    private async Task ShowModal(bool isClasificacion = false)
+    {
+        IModalReference modalReference;
+
+        if (isClasificacion)
+        {
+            modalReference = Modal.Show<TicketClasificacionCreate>(string.Empty, new ModalParameters().Add("ClienteId", cliente!.Id));
+
+        }
+        else
+        {
+            modalReference = Modal.Show<TicketContactoCreate>(string.Empty, new ModalParameters().Add("ClienteId", cliente!.Id));
+        }
+
+        var result = await modalReference.Result;
+        if (result.Confirmed)
+        {
+            ToastLoad("Registro guardado correctamente", MudBlazor.Severity.Success);
+            if (isClasificacion)
+            {
+                await LoadClasificacionesAsync();
+            }
+            else
+            {
+                await LoadClienteAsync();
+            }
+
+        }
+    }
+
+
+    private void ToastLoad(string Title, MudBlazor.Severity severity)
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopEnd;
+        Snackbar.Add(Title, severity);
+
+    }
+
+    private List<BreadcrumbItem> _items = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Inicio", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("Tickets", href: "/tickets"),
+        new BreadcrumbItem("Selección de Clientes", href: "/tickets/seleccionClientes"),
+        new BreadcrumbItem("Creación de Ticket", href: null, disabled: true)
+    };
+
+}

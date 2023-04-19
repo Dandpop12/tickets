@@ -16,9 +16,6 @@ namespace tickets.shared.Models
         [Key]
         public int Id { get; set; }
 
-        [Display(Name = "COD")]
-        public string IdenTicket { get; set; } = null!;
-
         [Required(ErrorMessage = "The field {0} is required")]
         [Display(Name = "Estado")]
         public EstadosTickets Estado { get; set; }
@@ -48,7 +45,7 @@ namespace tickets.shared.Models
         public int EmpleadoId { get; set; }
 
         [Display(Name = "Usuario Registro")]
-        [Required(ErrorMessage = "El campo {0} es obligatorio")]
+        //[Required(ErrorMessage = "El campo {0} es obligatorio")]
         public string? UserId { get; set; }
 
         [Required(ErrorMessage = "The field {0} is required")]
@@ -60,11 +57,11 @@ namespace tickets.shared.Models
         public string Notas { get; set; } = null!;
 
         public DateTime FechaRegistro { get; set; }
-        public DateTime FechaCorta { get; set; }
         public TimeSpan Hora { get; set; }
 
+        public DateTime? FechaAsignada { get; set; } = null;
+
         public DateTime? FechaEntrega { get; set; } = null;
-        public DateTime? FechaCortaEntrega { get; set; } = null;
         public TimeSpan? HoraEntrega { get; set; } = null;
 
 
@@ -202,7 +199,7 @@ namespace tickets.shared.Models
 
         public Generales_Empleados? Empleado { get; set; }
 
-        public User? Usuario { get; set; }
+        public User? User { get; set; }
 
 
     }

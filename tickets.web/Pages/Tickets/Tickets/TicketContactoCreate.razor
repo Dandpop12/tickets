@@ -1,0 +1,113 @@
+﻿@page "/tickets/create/createContact/{ClienteId:int}"
+@using tickets.web.Pages.Clientes.Contactos;
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Super_User, Admin")]
+
+<MudText Typo="Typo.h5">Nuevo Contacto</MudText>
+<MudDivider Class="mb-4"/>
+
+<ContactoForm @ref="modelForm" Model="model" OnValidSubmit="CreateAsync" ReturnAction="Return" />
+
+@*<EditForm Model="model" OnValidSubmit="CreateAsync">
+    <DataAnnotationsValidator />
+
+    <MudStack Row="true">
+        <MudTextField @bind-Value="@model!.Nombre" For="@(() => @model!.Nombre)" Label="Nombre" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" />
+
+        <MudTextField @bind-Value="@model!.Apellido" For="@(() => @model!.Apellido)" Label="Apellido" Variant="Variant.Text" Margin="Margin.Dense" Required="true" Clearable="true" />
+    </MudStack>
+
+    <MudStack Row="true">
+        <MudTextField @bind-Value="@model!.Departamento" For="@(() => @model!.Departamento)" Label="Departamento" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+
+        <MudTextField @bind-Value="@model!.Cargo" For="@(() => @model!.Cargo)" Label="Cargo" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+    </MudStack>
+
+    <MudStack Row="true">
+        <MudTextField Mask="@(new PatternMask("(000) 000 0000"))" @bind-Value="@model!.Telefono" For="@(() => @model!.Telefono)" Label="Teléfono" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+
+        <MudTextField Mask="@(new PatternMask("(000) 000 0000"))" @bind-Value="@model.Flota" For="@(() => @model.Flota)" Label="Flota" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+    </MudStack>
+
+    <MudTextField @bind-Value="@model!.Correo" For="@(() => @model!.Correo)" Label="Correo" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+
+    <MudTextField Lines="2" @bind-Value="@model!.Notas" For="@(() => @model!.Notas)" Label="Notas" Variant="Variant.Text" Margin="Margin.Dense" Clearable="true" />
+
+
+    @*<MudSelect For="@(() => @Model.ClienteId)" @bind-Value="@(Model!.ClienteId)" Required="true" Label="Cliente" Dense="true" Placeholder="Seleccione un cliente" AnchorOrigin="Origin.BottomCenter">
+
+    @if (clientes is not null)
+    {
+    @foreach (var cliente in clientes)
+    {
+    <MudSelectItem Value="@cliente.Id">@cliente.Nombre</MudSelectItem>
+    }
+    }
+    </MudSelect>*@
+
+
+    @*<MudRadioGroup For="@(() => @model!.Estado)" @bind-SelectedOption="@(model!.Estado)">
+        <MudRadio Option="EstadosGenerales.Activo" Color="Color.Success">Activo</MudRadio>
+        <MudRadio Option="EstadosGenerales.Inactivo" Color="Color.Error">Inactivo</MudRadio>
+    </MudRadioGroup>
+
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="pt-4">
+        <MudButton Disabled="@_isLoading" ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Success">
+
+            @if (_isLoading)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Guardando</MudText>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Save" Title="Guardar" Size="Size.Small" Class="mr-3" />
+                <MudText>Guardar</MudText>
+            }
+        </MudButton>
+
+        <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.ArrowBack" Variant="Variant.Filled" Color="Color.Info" OnClick="Return">
+            Volver
+        </MudButton>
+    </MudStack>
+</EditForm>
+*@
+@code {
+    private Clientes_Contactos model = new();
+    private ContactoForm? modelForm;
+    private bool _isLoading;
+
+    [Parameter]
+    public int ClienteId { get; set; }
+
+    [CascadingParameter]
+    BlazoredModalInstance BlazoredModal { get; set; } = default!;
+
+    private async Task CreateAsync()
+    {
+        _isLoading = true;
+        model.ClienteId = ClienteId;
+        var httpResponse = await repository.Post("/api/contactos", model);
+        if (httpResponse.Error)
+        {
+            _isLoading = false;
+            var msg = await httpResponse.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", msg, SweetAlertIcon.Error);
+            return;
+        }
+
+        _isLoading = false;
+        await BlazoredModal.CloseAsync(ModalResult.Ok());
+        Return();
+    }
+
+    private void Return()
+    {
+        modelForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo($"/tickets/create/{model.ClienteId}");
+    }
+}

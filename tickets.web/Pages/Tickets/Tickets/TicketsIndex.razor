@@ -1,0 +1,237 @@
+﻿@page "/tickets"
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+@inject ISnackbar Snackbar
+@attribute [Authorize(Roles = "Super_User, Admin")]
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudBreadcrumbs Items="_items" />
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudCard Elevation="25" Class="rounded-lg">
+                <MudCardHeader Class="pb-0">
+
+                    <MudText Typo="Typo.h6">Tickets</MudText>
+                    <MudSpacer />
+
+                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Style="text-transform:none"
+                               OnClick="@(() => AddNewTicketAsync())">
+                        Nuevo Ticket
+                    </MudButton>
+
+                </MudCardHeader>
+
+                <MudCardContent>
+
+
+                    <MudTable ServerData="@(new Func<TableState, Task<TableData<Tickets>>>(ServerReload))"
+                              Hover="true"
+                              Breakpoint="Breakpoint.Sm"
+                              Dense="true"
+                              LoadingProgressColor="Color.Info"
+                              @ref="table"
+                              Elevation="0">
+                        <ToolBarContent>
+
+                            <MudTextField Class="mb-4" T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Buscar" Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Text"
+                                          Clearable="true"></MudTextField>
+
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>Cliente</MudTh>
+                            <MudTh>Clasificación</MudTh>
+                            <MudTh>Título</MudTh>
+                            <MudTh>Empleado</MudTh>
+                            <MudTh>Fecha</MudTh>
+                            <MudTh>Tiempo</MudTh>
+                            <MudTh>Prioridad</MudTh>
+                            <MudTh>Estado</MudTh>
+                            <MudTh>Acciones</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Titulo">
+                                @context.Cliente!.Nombre
+                            </MudTd>
+
+                            <MudTd DataLabel="Clasificación">
+                                @context.Clasificacion!.Descripcion
+                            </MudTd>
+
+                            <MudTd DataLabel="Titulo">
+                                @context.Titulo
+                            </MudTd>
+
+                            <MudTd DataLabel="Empleado">
+                                @context.Empleado!.Nombre
+                            </MudTd>
+
+                            <MudTd DataLabel="Fecha">
+                                @context.FechaRegistro
+                            </MudTd>
+
+                            <MudTd DataLabel="Tiempo">
+                                @context.TiempoEspera
+                            </MudTd>
+
+                            <MudTd DataLabel="Prioridad">
+                                @if (@context.Prioridad.ToString() == "Alta")
+                                {
+                                    <MudChip Color="Color.Error" Size="Size.Small">@context.Prioridad.ToString()</MudChip>
+                                }
+                                else if (@context.Prioridad.ToString() == "Media")
+                                {
+                                    <MudChip Color="Color.Warning" Size="Size.Small">@context.Prioridad.ToString()</MudChip>
+                                }
+                                else if (@context.Prioridad.ToString() == "Baja")
+                                {
+                                    <MudChip Color="Color.Info" Size="Size.Small">@context.Prioridad.ToString()</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip Color="Color.Dark" Size="Size.Small">@context.Prioridad.ToString()</MudChip>
+                                }
+                            </MudTd>
+
+                            <MudTd DataLabel="Estado">
+                                @if (@context.Estado.ToString() == "Nuevo")
+                                {
+                                    <MudChip Color="Color.Primary" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                }
+                                else if (@context.Estado.ToString() == "En_Proceso")
+                                {
+                                    <MudChip Color="Color.Info" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                }
+                                else if (@context.Estado.ToString() == "En_Espera")
+                                {
+                                    <MudChip Color="Color.Warning" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                }
+                                else if (@context.Estado.ToString() == "Entregado")
+                                {
+                                    <MudChip Color="Color.Success" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                }
+                                else if (@context.Estado.ToString() == "Archivado")
+                                {
+                                    <MudChip Color="Color.Dark" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip Color="Color.Tertiary" Size="Size.Small">@context.Estado.ToString()</MudChip>
+                                }
+                            </MudTd>
+
+                            <MudTd DataLabel="Acciones">
+                                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Info" Color="Color.Info" Size="Size.Small" Style="text-transform:none"
+                                           OnClick="@(() => GoToDetails(context))">
+                                    Detalles
+                                </MudButton>
+
+@*                                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Warning" Size="Size.Small" Style="text-transform:none"
+                                           OnClick="@(() => ShowModal(context.Id, true))">
+                                    Modificar
+                                </MudButton>
+*@
+                            </MudTd>
+
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText>No matching records found</MudText>
+                        </NoRecordsContent>
+                        <LoadingContent>
+                            <MudText>Loading...</MudText>
+                        </LoadingContent>
+                        <PagerContent>
+                            <MudTablePager HideRowsPerPage="true" HidePagination="false" />
+                        </PagerContent>
+                    </MudTable>
+
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+
+
+@code {
+    private IEnumerable<Tickets> pagedData;
+    private MudTable<Tickets> table;
+    private int totalItems;
+    private string searchString = null!;
+
+    [CascadingParameter]
+    IModalService Modal { get; set; } = default!;
+
+    private async Task<TableData<Tickets>> ServerReload(TableState state)
+    {
+        string url1 = string.Empty;
+        string url2 = string.Empty;
+
+        if (string.IsNullOrEmpty(searchString))
+        {
+            url1 = $"api/tickets?page={state.Page + 1}";
+            url2 = $"api/tickets/totalPages";
+        }
+        else
+        {
+            url1 = $"api/tickets?page={state.Page + 1}&filter={searchString}";
+            url2 = $"api/tickets/totalPages?filter={searchString}";
+        }
+
+        try
+        {
+            var responseHppt = await repository.Get<List<Tickets>>(url1);
+            var responseHppt2 = await repository.Get<PagesDTO>(url2);
+
+            IEnumerable<Tickets> data = responseHppt.Response!;
+
+            totalItems = (int)responseHppt2.Response!.TotalCounts!;
+
+            pagedData = data.ToArray();
+            return new TableData<Tickets>() { TotalItems = totalItems, Items = pagedData };
+        }
+        catch (Exception ex)
+        {
+            await sweetAlertService.FireAsync("Error", ex.Message, SweetAlertIcon.Error);
+            return new TableData<Tickets>() { TotalItems = totalItems, Items = pagedData };
+        }
+    }
+
+    private void OnSearch(string text)
+    {
+        searchString = text;
+        table.ReloadServerData();
+    }
+
+    private void AddNewTicketAsync()
+    {
+        navigationManager.NavigateTo($"/tickets/seleccionClientes");
+    }
+
+    private void GoToDetails(Tickets ticket)
+    {
+        navigationManager.NavigateTo($"/tickets/details/{ticket.Id}");
+    }
+
+    private void PageChanged(int i)
+    {
+        table.NavigateTo(i - 1);
+    }
+
+    private List<BreadcrumbItem> _items = new List<BreadcrumbItem>
+    {
+        new BreadcrumbItem("Inicio", href: "/", icon: Icons.Material.Filled.Home),
+        new BreadcrumbItem("Tickets", href: null, disabled: true),
+    };
+
+    private void ToastLoad(string Title, MudBlazor.Severity severity)
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopEnd;
+        Snackbar.Add(Title, severity);
+
+    }
+}

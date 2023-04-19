@@ -3,7 +3,7 @@
     public enum Prioridades
     {
         Alta,
-        Baja,
-        Media
+        Media,
+        Baja
     }
 }

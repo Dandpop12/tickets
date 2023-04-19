@@ -10,13 +10,13 @@ using tickets.shared.Models;
 namespace tickets.api.Controllers
 {
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Route("api/clasificacionesTickets")]
+    [Route("api/clasificaciones")]
     [ApiController]
-    public class TicketsClasificacionController : ControllerBase
+    public class ClientesClasificacionController : ControllerBase
     {
         private readonly DataContext _context;
 
-        public TicketsClasificacionController(DataContext context)
+        public ClientesClasificacionController(DataContext context)
         {
             _context = context;
         }
@@ -24,8 +24,8 @@ namespace tickets.api.Controllers
         [HttpGet]
         public async Task<ActionResult> GetAsync([FromQuery] PaginationDTO pagination)
         {
-            var queryable = _context.Tickets_Clasificaciones
-                .Include(e => e.Tickets)
+            var queryable = _context.Clientes_Clasificaciones
+                .Include(e => e.Clientes)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
@@ -43,7 +43,7 @@ namespace tickets.api.Controllers
         [HttpGet("totalPages")]
         public async Task<ActionResult> GetPages([FromQuery] PaginationDTO pagination)
         {
-            var queryable = _context.Tickets_Clasificaciones.AsQueryable();
+            var queryable = _context.Clientes_Clasificaciones.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(pagination.Filter))
             {
@@ -65,14 +65,14 @@ namespace tickets.api.Controllers
         [HttpGet("combo")]
         public async Task<ActionResult> GetCombo()
         {
-            return Ok(await _context.Tickets_Clasificaciones.ToListAsync());
+            return Ok(await _context.Clientes_Clasificaciones.ToListAsync());
         }
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetAsync(int id)
         {
-            var empleado = await _context.Tickets_Clasificaciones
-                .Include(e => e.Tickets)
+            var empleado = await _context.Clientes_Clasificaciones
+                .Include(e => e.Clientes)
                .FirstOrDefaultAsync(x => x.Id == id);
             if (empleado == null)
             {
@@ -83,7 +83,7 @@ namespace tickets.api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> PostAsync(Tickets_Clasificacion clasificacion)
+        public async Task<ActionResult> PostAsync(Clientes_Clasificacion clasificacion)
         {
             try
             {
@@ -109,7 +109,7 @@ namespace tickets.api.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult> PutAsync(Tickets_Clasificacion clasificacion)
+        public async Task<ActionResult> PutAsync(Clientes_Clasificacion clasificacion)
         {
             try
             {
@@ -138,7 +138,7 @@ namespace tickets.api.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteAsync(int id)
         {
-            var empleado = await _context.Tickets_Clasificaciones.FirstOrDefaultAsync(x => x.Id == id);
+            var empleado = await _context.Clientes_Clasificaciones.FirstOrDefaultAsync(x => x.Id == id);
             if (empleado == null)
             {
                 return NotFound();
